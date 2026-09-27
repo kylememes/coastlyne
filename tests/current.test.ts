@@ -1,0 +1,14 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {monthlyAmount,datesBetween,paydayPlan,parseCSV,recurringSuggestions,type FlowItem} from '../lib/current.ts';
+import {parseSaved} from '../lib/saved-data.ts';
+const pay:FlowItem={id:'pay',name:'Pay',kind:'income',amount:1000,frequency:'biweekly',date:'2026-09-04'};
+test('biweekly and twice-monthly have distinct monthly averages',()=>{assert.equal(monthlyAmount(pay,[pay]),26000/12);assert.equal(monthlyAmount({...pay,frequency:'semimonthly'},[]),2000)});
+test('payday savings follow the linked paycheck, not all income',()=>{const s:FlowItem={id:'s',name:'Save',kind:'saving',amount:10,mode:'payday-percent',incomeId:'pay'};assert.equal(monthlyAmount(s,[pay,s]),2600/12);assert.equal(monthlyAmount(s,[]),0)});
+test('monthly anchor recovers the 31st after February',()=>assert.deepEqual(datesBetween({...pay,frequency:'monthly',date:'2026-01-31'},'2026-02-01','2026-03-31'),['2026-02-28','2026-03-31']));
+test('twice-monthly supports two explicit days and month end',()=>assert.deepEqual(datesBetween({...pay,frequency:'semimonthly',date:'2026-01-15',secondDay:31},'2026-02-01','2026-03-01'),['2026-02-15','2026-02-28']));
+test('one-time outflow counts before payday but not monthly average',()=>{const bill:FlowItem={id:'b',name:'Repair',kind:'fixed',amount:250,frequency:'once',date:'2026-09-10'};const plan=paydayPlan([pay,bill],'2026-09-05',1000,200);assert.equal(plan.next?.date,'2026-09-18');assert.equal(plan.available,550);assert.equal(monthlyAmount(bill,[]),0)});
+test('payday expenses are in the next window and missing dates are reported',()=>{const bill:FlowItem={id:'b',name:'Rent',kind:'fixed',amount:500,date:'2026-09-18'};const unknown={...bill,id:'u',date:undefined};const p=paydayPlan([pay,bill,unknown],'2026-09-05',1000,0);assert.equal(p.outflows,0);assert.equal(p.undated.length,1)});
+test('CSV supports quoted names, parentheses and debit/credit',()=>{assert.deepEqual(parseCSV('Date,Description,Amount\r\n09/01/2026,"Rent, home",(1200)')[0],{date:'2026-09-01',name:'Rent, home',amount:-1200});assert.equal(parseCSV('Date,Description,Debit,Credit\n2026-09-01,Pay,,1000')[0].amount,1000);assert.throws(()=>parseCSV('Date,Description,Amount\n2026-02-31,Rent,-1200'))});
+test('recurrence requires three occurrences and excludes transfers',()=>{const rows=parseCSV('Date,Description,Amount\n2026-07-01,Rent,-1200\n2026-08-01,Rent,-1200\n2026-09-01,Rent,-1200\n2026-07-01,Transfer,-100\n2026-08-01,Transfer,-100\n2026-09-01,Transfer,-100');assert.equal(recurringSuggestions(rows).length,1);assert.equal(recurringSuggestions(rows)[0].frequency,'monthly');assert.equal(recurringSuggestions(rows.slice(0,2)).length,0)});
+test('storage preserves legacy monthly entries and new schedule fields',()=>{for(const item of [{id:'old',name:'Rent',amount:1000,kind:'fixed'},pay])assert.deepEqual(parseSaved('current',JSON.stringify({version:2,value:[item]}),[]),[item])});

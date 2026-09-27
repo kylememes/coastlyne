@@ -1,3 +1,5 @@
+import {monthlyAmount,type FlowItem} from './current.ts';
+export type {FlowItem} from './current.ts';
 export function futureValue(initial:number,monthly:number,rate:number,years:number,frequency=12){
  if(![initial,monthly,rate,years,frequency].every(Number.isFinite)||initial<0||monthly<0||rate<=-100||years<0||frequency<1)throw Error('Invalid financial inputs');
  const r=Math.pow(1+rate/100,1/frequency)-1,n=years*frequency;
@@ -6,8 +8,8 @@ export function futureValue(initial:number,monthly:number,rate:number,years:numb
 export function requiredMonthly(target:number,initial:number,rate:number,months:number){if(months<=0)return target<=initial?0:null;const base=futureValue(initial,0,rate,months/12);const unit=futureValue(0,1,rate,months/12);return Math.max(0,(target-base)/unit)}
 export function purchasingPower(value:number,inflation:number,years:number){if(inflation<=-100)throw Error('Invalid inflation');return value/Math.pow(1+inflation/100,years)}
 export function fire(spending:number,assets:number,annual:number,rate:number,inflation:number,withdrawal:number){if(withdrawal<=0||spending<0||annual<0)throw Error('Invalid FIRE inputs');const target=spending/(withdrawal/100),real=((1+rate/100)/(1+inflation/100)-1)*100;let years:number|null=null;for(let m=0;m<=1200;m++){if(futureValue(assets,annual/12,real,m/12)>=target){years=m/12;break}}return {target,years,progress:target?assets/target*100:100,real}}
-export type FlowItem={id:string;name:string;amount:number;kind:'income'|'fixed'|'variable'|'saving'};
-export function cashflow(items:FlowItem[]){const sum=(kind:FlowItem['kind'])=>items.filter(i=>i.kind===kind).reduce((s,i)=>s+i.amount,0);const income=sum('income'),fixed=sum('fixed'),variable=sum('variable'),saving=sum('saving');return {income,fixed,variable,saving,spending:fixed+variable,remaining:income-fixed-variable-saving,savingsRate:income?saving/income*100:0,fixedRate:income?fixed/income*100:0}}
+
+export function cashflow(items:FlowItem[]){const sum=(kind:FlowItem['kind'])=>items.filter(i=>i.kind===kind).reduce((s,i)=>s+monthlyAmount(i,items),0);const income=sum('income'),fixed=sum('fixed'),variable=sum('variable'),saving=sum('saving');return {income,fixed,variable,saving,spending:fixed+variable,remaining:income-fixed-variable-saving,savingsRate:income?saving/income*100:0,fixedRate:income?fixed/income*100:0}}
 export type Goal={id:string;name:string;target:number;saved:number;date:string;monthly:number;rate:number;category:string};
 export function goalProjection(g:Goal,now=new Date()){
  const d=new Date(g.date+'T00:00:00Z');const valid=Number.isFinite(d.getTime())&&d.toISOString().slice(0,10)===g.date;
