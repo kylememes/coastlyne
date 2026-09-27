@@ -1,6 +1,6 @@
-# GUIDANCE
+# CURRIVAL
 
-**Your financial future, crystal clear.**
+**Build the current. Reach your horizon.**
 
 Production: https://guidance-nine.vercel.app · Repository: https://github.com/kylememes/guidance
 
@@ -81,3 +81,7 @@ The existing GitHub `main` branch deploys to the existing Vercel `guidance` proj
 Automated tests cover retirement reconciliation, matching, zero returns, effective compounding, goal requirements and dates, negative cash flow, FIRE, inflation, scenario comparisons, equal retirement/current age and malformed storage. Run `pnpm test`, `pnpm typecheck` and `pnpm build` before release.
 
 Browser checks cover editable categories and accurate totals, refresh persistence, goal editing and progress, responsive cards/details/charts, cross-product summaries, direct routes and redirects. Mobile checks use a 390px embedded viewport; this is not a physical-device touch or orientation test. Production deployment status and live routes are verified separately from local build success.
+
+## CURRIVAL identity
+
+The supplied ocean-current logo is optimized as `public/currival-logo.webp` and used in the header, homepage and footer, with a matching app icon. CURRIVAL combines current/currency with arrival. The existing production URL and repository remain unchanged. The legacy `guidance:v2:` storage namespace is intentionally retained so existing plans survive the rebrand.
