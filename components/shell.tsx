@@ -1,0 +1,8 @@
+"use client";
+import Link from 'next/link';
+import {usePathname} from 'next/navigation';
+import {useState} from 'react';
+import {Waves,Menu,X,ArrowUpRight} from 'lucide-react';
+import {products} from '@/lib/products';
+export function Header(){const path=usePathname();const[open,setOpen]=useState(false);return <header className="header"><Link className="brand" href="/" aria-label="Guidance home"><Waves/> GUIDANCE</Link><button className="menu-button" aria-expanded={open} aria-label={open?'Close navigation':'Open navigation'} onClick={()=>setOpen(!open)}>{open?<X/>:<Menu/>}</button><nav className={open?'nav open':'nav'} aria-label="Main navigation">{products.map(([name,,url])=><Link key={url} href={url} onClick={()=>setOpen(false)} className={path===url?'active':''}>{name}{name==='Horizon'&&<span className="nav-dot"/>}</Link>)}</nav><Link className="nav-cta" href="/horizon">Find your horizon <ArrowUpRight size={16}/></Link></header>}
+export function Footer(){return <footer><div className="footer-top"><Link href="/" className="brand"><Waves/> GUIDANCE</Link><p>A clearer view of what’s ahead.</p></div><div className="footer-bottom"><span>© {new Date().getFullYear()} GUIDANCE</span><div><Link href="/about">About & methodology</Link><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link></div></div><p className="fine">For educational purposes only. Projections are estimates, not guarantees or individualized financial, investment, tax, or legal advice.</p></footer>}

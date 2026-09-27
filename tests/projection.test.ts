@@ -1,0 +1,11 @@
+import {test} from 'node:test';
+import assert from 'node:assert/strict';
+import {project,defaults} from '../lib/projection.ts';
+const close=(a:number,b:number)=>assert.ok(Math.abs(a-b)<1e-6,`${a} differs from ${b}`);
+test('zero returns produce deposits plus starting balance',()=>{const r=project({...defaults,retirementAge:31,returns:0,salaryGrowth:0}).at(-1)!;close(r.portfolio,35500);close(r.personal,7500);close(r.employer,3000);close(r.growth,0)});
+test('effective annual compounding is independent of frequency without deposits',()=>{for(const frequency of [1,12,26,52]){const r=project({...defaults,retirementAge:40,contribution:0,returns:7,frequency}).at(-1)!;close(r.portfolio,25000*1.07**10)}});
+test('employer cannot match more than actual deposits',()=>{const r=project({...defaults,retirementAge:31,contribution:2,returns:0}).at(-1)!;close(r.employer,1500)});
+test('fixed deposits stay flat while salary grows',()=>{const r=project({...defaults,retirementAge:32,mode:'amount',contribution:100,frequency:12,returns:0,salaryGrowth:10}).at(-1)!;close(r.personal,2400);close(r.employer,2400)});
+test('annual deposits follow end-of-period annuity formula',()=>{const r=project({...defaults,balance:0,retirementAge:40,salary:10000,contribution:10,match:0,salaryGrowth:0,frequency:1,returns:5}).at(-1)!;close(r.portfolio,1000*((1.05**10-1)/.05))});
+test('every point reconciles and negative returns remain supported',()=>{for(const returns of [-20,0,7,20])for(const p of project({...defaults,returns})){close(p.portfolio,p.initial+p.personal+p.employer+p.growth);assert.ok(p.portfolio>=0)}});
+test('invalid numeric assumptions rejected',()=>{assert.throws(()=>project({...defaults,returns:NaN}));assert.throws(()=>project({...defaults,retirementAge:20}))});
