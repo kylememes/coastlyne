@@ -1,4 +1,4 @@
-# CURRIVAL
+# COASTLYNE
 
 **Build the current. Reach your horizon.**
 
@@ -10,7 +10,8 @@ An account-free financial planning platform with device-local saving. Phase 2 ex
 
 | Route | Experience |
 | --- | --- |
-| `/bay` | Local overview of monthly cash flow, retirement projection and goal progress |
+| `/` | Personal overview with saved cash flow, retirement projections, goals, and tool cards |
+| `/bay` | Redirects to the homepage |
 | `/current` | Editable income, expense and savings categories, live totals and proportional flow ribbons |
 | `/investment-horizon` | Retirement projection, employer match, inflation adjustment and interactive year exploration in a tropical sunset environment |
 | `/islands` | Multiple destination goals with progress, contribution requirements, arrival estimates and accessible detail panels |
@@ -82,6 +83,6 @@ Automated tests cover retirement reconciliation, matching, zero returns, effecti
 
 Browser checks cover editable categories and accurate totals, refresh persistence, goal editing and progress, responsive cards/details/charts, cross-product summaries, direct routes and redirects. Mobile checks use a 390px embedded viewport; this is not a physical-device touch or orientation test. Production deployment status and live routes are verified separately from local build success.
 
-## CURRIVAL identity
+## COASTLYNE identity
 
-The supplied ocean-current logo is optimized as `public/currival-logo.webp` and used in the header, homepage and footer, with a matching app icon. CURRIVAL combines current/currency with arrival. The existing production URL and repository remain unchanged. The legacy `guidance:v2:` storage namespace is intentionally retained so existing plans survive the rebrand.
+The supplied COASTLYNE ocean-wave logo is used in the header, homepage, footer, and app icon. The homepage includes saved-data cards for Current, Investment Horizon, and Islands, plus In Depth and Compass. The legacy `guidance:v2:` storage namespace is retained to preserve existing plans.
