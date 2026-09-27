@@ -1,0 +1,9 @@
+import {z} from 'zod';
+const nonnegative=z.number().finite().min(0).max(1e12);
+const returns=z.number().finite().min(-20).max(20);
+const horizon=z.object({age:z.number().int().min(18).max(100),retirementAge:z.number().int().min(18).max(100),balance:nonnegative,salary:nonnegative,contribution:nonnegative,mode:z.enum(['percent','amount']),frequency:z.number().int().min(1).max(365),match:nonnegative,matchCap:nonnegative,returns,salaryGrowth:z.number().finite().min(-10).max(15),inflation:z.number().finite().min(0).max(20),withdrawal:z.number().finite().min(0).max(10)}).refine(a=>a.retirementAge>=a.age);
+const flow=z.array(z.object({id:z.string(),name:z.string().max(60),amount:nonnegative,kind:z.enum(['income','fixed','variable','saving'])}));
+const goals=z.array(z.object({id:z.string(),name:z.string().max(60),target:nonnegative,saved:nonnegative,date:z.string(),monthly:nonnegative,rate:returns,category:z.string()}));
+const calculator=z.object({initial:nonnegative,monthly:nonnegative,rate:returns,years:z.number().int().min(1).max(100),frequency:z.number().int().min(1).max(365),target:nonnegative,inflation:z.number().finite().min(0).max(20),spending:z.number().finite().min(1).max(1e12),annual:nonnegative,withdrawal:z.number().finite().min(.1).max(10),age:z.number().int().min(18).max(100)});
+const comparison=z.object({retirementAge:z.number().int().min(18).max(100),contribution:nonnegative,returns,fee:z.number().finite().min(0).max(5)});
+export function parseSaved<T>(key:string,raw:string|null,fallback:T):T{try{if(!raw)return fallback;const d=JSON.parse(raw);if(d.version!==2)return fallback;const schema=key==='horizon'?horizon:key==='current'?flow:key==='goals'?goals:key==='comparison'?comparison:key.startsWith('calculator-')?calculator:null;const parsed=schema?.safeParse(d.value);return parsed?.success?parsed.data as T:fallback}catch{return fallback}}

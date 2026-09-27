@@ -1,7 +1,7 @@
 import {notFound} from 'next/navigation';
-import Link from 'next/link';
 import {products} from '@/lib/products';
-import {ArrowUpRight,Waves} from 'lucide-react';
-export function generateStaticParams(){return products.filter(p=>p[2]!=='/horizon').map(p=>({product:p[2].slice(1)}))}
-export async function generateMetadata({params}:{params:Promise<{product:string}>}){const {product}=await params;return {title:products.find(p=>p[2]==='/'+product)?.[0]||'Not found'}}
-export default async function Page({params}:{params:Promise<{product:string}>}){const {product}=await params;const p=products.find(p=>p[2]==='/'+product);if(!p)notFound();return <main id="main" className="preview-page section"><span className="eyebrow">{product==='bay'?'YOUR FINANCIAL HOME · PREVIEW':'ON THE HORIZON'}</span><Waves className="preview-icon"/><h1>{p[0]}<span>.</span></h1><p className="lead">{p[1]}</p><p>{product==='bay'?'A home for your financial world is taking shape. Start with Horizon today; the rest of your dashboard is coming later.':'We’re building this part of GUIDANCE. It isn’t available yet, but your long-term journey can start today.'}</p><div className="bay-grid">{(product==='bay'?products.filter(p=>p[0]!=='The Bay'):[products[2]]).map(([name,desc,url])=><Link className="glass bay-card" href={url} key={name}><span className="pill">{name==='Horizon'?'Available now':'Coming later'}</span><h2>{name}</h2><p>{desc}</p><ArrowUpRight/></Link>)}</div></main>}
+import {Current,Islands,Bay} from '@/components/planning';
+import {Compass,InDepth} from '@/components/analytics';
+export function generateStaticParams(){return ['bay','current','islands','compass','in-depth'].map(product=>({product}))}
+export async function generateMetadata({params}:{params:Promise<{product:string}>}){const {product}=await params;const p=products.find(p=>p[2]==='/'+product);return {title:p?.[0]||'Not found',description:p?.[1],openGraph:{title:p?.[0]+' | GUIDANCE',description:p?.[1]}}}
+export default async function Page({params}:{params:Promise<{product:string}>}){const {product}=await params;const Component={bay:Bay,current:Current,islands:Islands,compass:Compass,'in-depth':InDepth}[product];if(!Component)notFound();return <Component/>}

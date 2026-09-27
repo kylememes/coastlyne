@@ -1,0 +1,11 @@
+import test from 'node:test';import assert from 'node:assert/strict';
+import {futureValue,requiredMonthly,purchasingPower,fire,cashflow,goalProjection} from '../lib/finance.ts';
+import {project,defaults} from '../lib/projection.ts';
+test('zero-return compounding and contribution target',()=>{assert.equal(futureValue(1000,100,0,10),13000);assert.equal(requiredMonthly(13000,1000,0,120),100)});
+test('effective annual compounding without deposits',()=>{assert.ok(Math.abs(futureValue(1000,0,10,2,12)-1210)<1e-8)});
+test('inflation conversion',()=>assert.ok(Math.abs(purchasingPower(1210,10,2)-1000)<1e-8));
+test('FIRE zero real return and reached target',()=>{assert.equal(fire(40000,1000000,0,0,0,4).years,0);assert.equal(fire(40000,0,100000,0,0,4).years,10);assert.equal(fire(40000,0,0,0,0,4).years,null)});
+test('negative monthly cash flow remains visible',()=>{const f=cashflow([{id:'1',name:'Income',kind:'income',amount:1000},{id:'2',name:'Rent',kind:'fixed',amount:1200}]);assert.equal(f.remaining,-200);assert.equal(f.fixedRate,120)});
+test('goal dates, reached goals and unreachable goals',()=>{const g={id:'1',name:'Goal',target:1200,saved:0,date:'2027-09-01',monthly:100,rate:0,category:'Other'};assert.equal(goalProjection(g,new Date('2026-09-01')).required,100);assert.equal(goalProjection({...g,date:'bad'}).months,null);assert.equal(goalProjection({...g,date:'2026-02-30'}).months,null);assert.equal(goalProjection({...g,saved:1200}).completion,0);assert.equal(goalProjection({...g,monthly:0}).completion,null)});
+test('equal current and retirement age and scenario comparison',()=>{assert.equal(project({...defaults,retirementAge:defaults.age}).length,1);assert.ok(project({...defaults,contribution:15}).at(-1)!.portfolio>project(defaults).at(-1)!.portfolio)});
+test('reject bad rate and nonfinite assumptions',()=>{assert.throws(()=>futureValue(1,1,-100,2));assert.throws(()=>futureValue(1,1,7,NaN));assert.equal(requiredMonthly(100,0,0,0),null)});

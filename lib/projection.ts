@@ -3,7 +3,7 @@ export const defaults:Assumptions={age:30,retirementAge:65,balance:25000,salary:
 export type Point={age:number;year:number;portfolio:number;personal:number;employer:number;growth:number;initial:number};
 export function project(a:Assumptions,startYear=2026):Point[]{
  if(Object.values(a).some(v=>typeof v==='number'&&!Number.isFinite(v))) throw Error('All inputs must be finite.');
- if(a.retirementAge<=a.age||a.returns<=-100||a.inflation<=-100||a.frequency<1) throw Error('Invalid projection assumptions.');
+ if(a.retirementAge<a.age||a.returns<=-100||a.inflation<=-100||a.frequency<1) throw Error('Invalid projection assumptions.');
  let portfolio=a.balance,personal=0,employer=0;
  const rows:Point[]=[{age:a.age,year:startYear,portfolio,personal,employer,growth:0,initial:a.balance}];
  const rate=Math.pow(1+a.returns/100,1/a.frequency)-1;
