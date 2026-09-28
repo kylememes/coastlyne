@@ -1,0 +1,16 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {dcf,portfolio,percentChange,surprise,type DcfInput} from '../lib/research/math.ts';
+import {parseSaved} from '../lib/saved-data.ts';
+import type {Quote} from '../lib/research/config.ts';
+const a:DcfInput={flows:[100,100,100,100,100],discount:10,terminalGrowth:0,cash:50,debt:20,shares:10,terminalMode:'growth',multiple:10};
+const near=(a:number,b:number)=>assert.ok(Math.abs(a-b)<1e-8,`${a} != ${b}`);
+test('DCF constant perpetuity and cash/debt bridge use consistent million units',()=>{const r=dcf(a)!;near(r.enterprise,1000);near(r.equity,1030);near(r.perShare,103);});
+test('DCF rejects singular terminal growth, zero shares, nonfinite input, negative final flow',()=>{assert.equal(dcf({...a,discount:0}),null);assert.equal(dcf({...a,terminalGrowth:10}),null);assert.equal(dcf({...a,shares:0}),null);assert.equal(dcf({...a,flows:[NaN]}),null);assert.equal(dcf({...a,flows:[-1]}),null)});
+test('Higher discount lowers valuation; terminal multiple discounts exactly',()=>{assert.ok(dcf({...a,discount:12})!.perShare<dcf(a)!.perShare);const r=dcf({...a,terminalMode:'multiple',flows:[100],multiple:5})!;near(r.enterprise,600/1.1)});
+test('Negative near-term cash flows remain in the valuation',()=>{assert.ok(dcf({...a,flows:[-100,100,100,100,100]})!.perShare<dcf(a)!.perShare)});
+const q=(symbol:string,price:number|null):Quote=>({symbol,price,change:null,changePercentage:null,marketCap:null,timestamp:1750000000,volume:null});
+test('Fractional shares, zero cost and same-issuer concentration',()=>{const p=portfolio([{symbol:'GOOG',shares:.5,averagePrice:100},{symbol:'GOOGL',shares:1.25,averagePrice:80}],[q('GOOG',200),q('GOOGL',160)]);near(p.cost,150);near(p.value!,300);near(p.gain!,150);near(p.gainPercent!,100);assert.equal(p.allocation.length,1);near(p.allocation[0].weight,100);assert.equal(portfolio([{symbol:'AAPL',shares:1,averagePrice:0}],[q('AAPL',1)]).gainPercent,null)});
+test('Missing or malformed prices never produce a partial portfolio total',()=>{const h=[{symbol:'AAPL',shares:1,averagePrice:100},{symbol:'MSFT',shares:2,averagePrice:50}];const p=portfolio(h,[q('AAPL',110)]);assert.equal(p.value,null);assert.equal(p.gain,null);assert.equal(p.cost,200);assert.deepEqual(p.allocation,[]);assert.equal(portfolio(h,[q('AAPL',NaN),q('MSFT',200)]).value,null)});
+test('Earnings surprises require comparable bases; losses use absolute estimate denominator',()=>{assert.equal(surprise(1,0,false),null);assert.deepEqual(surprise(-.5,-1,true),{amount:.5,percent:50});assert.deepEqual(surprise(1,0,true),{amount:1,percent:null});assert.equal(percentChange(null,1),null)});
+test('Holdings persist fractions but reject malformed saved values',()=>{const h=[{symbol:'NVDA',shares:.00123,averagePrice:5.4}];assert.deepEqual(parseSaved('holdings',JSON.stringify({version:2,value:h}),[]),h);assert.deepEqual(parseSaved('holdings',JSON.stringify({version:2,value:[{symbol:'NVDA',shares:-1,averagePrice:10}]}),[]),[])});

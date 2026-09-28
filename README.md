@@ -86,3 +86,7 @@ Browser checks cover editable categories and accurate totals, refresh persistenc
 ## COASTLYNE identity
 
 The supplied COASTLYNE ocean-wave logo is used in the header, homepage, footer, and app icon. The homepage includes saved-data cards for Current, Investment Horizon, and Islands, plus In Depth and Compass. The legacy `guidance:v2:` storage namespace is retained to preserve existing plans.
+
+### In Depth research workspace
+
+In Depth now focuses on stocks and portfolio analysis. See [data setup and activation checklist](docs/research-data.md) for provider comparison, commercial licensing, server environment variables, caching, costs and verification gaps. The manual FCFF DCF and locally saved fractional holdings work without API keys. Market datasets and AI remain explicitly unavailable until licensed access is configured and tested; no sample market data is presented as live.
