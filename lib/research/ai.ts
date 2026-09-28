@@ -11,7 +11,7 @@ async function redis(command:(string|number)[]){
  if(!response.ok)throw new DataError(503,'Analysis cache is unavailable. No AI request was started.');
  const body=z.object({error:z.string().optional(),result:z.unknown()}).parse(await response.json());if(body.error)throw new DataError(503,'Analysis cache is unavailable.');return body.result;
 }
-const pick=(r:Row|undefined,keys:string[])=>Object.fromEntries(keys.map(k=>[k,r?.[k]??null]));
+const pick=(r:Row|undefined,keys:string[])=>Object.fromEntries(keys.map(k=>[k,typeof r?.[k]==='string'?String(r[k]).slice(0,4000):r?.[k]??null]));
 export async function analyze(input:z.infer<typeof analysisInput>){
  if(process.env.RESEARCH_AI_ENABLED!=='true'||!process.env.OPENAI_API_KEY||!process.env.OPENAI_MODEL||!process.env.UPSTASH_REDIS_REST_URL||!process.env.UPSTASH_REDIS_REST_TOKEN)throw new DataError(503,'AI analysis is not connected yet. Licensed source data, AI access and a shared usage budget must be configured first.');
  const sources:{id:number;title:string;url:string;date:string}[]=[];let metrics:unknown;
@@ -30,7 +30,7 @@ export async function analyze(input:z.infer<typeof analysisInput>){
  sources.push({id:1,title:`${input.symbol} company profile · FMP`,url:safeUrl(p.rows[0].website)??'https://site.financialmodelingprep.com/',date:p.fetchedAt});
  for(const [title,row,endpoint] of [['Income statement',inc[0],'income-statement'],['Balance sheet',bal[0],'balance-sheet-statement'],['Cash flow',cf[0],'cash-flow-statement']] as const)sources.push({id:sources.length+1,title:`${input.symbol} ${title} · FMP normalized filing`,url:safeUrl(row.finalLink)??safeUrl(row.link)??`https://site.financialmodelingprep.com/developer/docs/stable/${endpoint}`,date:String(row.date)});
  }
- const model=process.env.OPENAI_MODEL;const fingerprint=createHash('sha256').update(JSON.stringify({version:1,model,metrics,sources:sources.map(({date,...s})=>({...s,date:date.slice(0,10)}))})).digest('hex');const key='coastlyne:analysis:'+fingerprint;
+ const model=process.env.OPENAI_MODEL;const fingerprint=createHash('sha256').update(JSON.stringify({version:1,model,metrics,sources:sources.map(({date,...s})=>({...s,date:date.length===10?date:null}))})).digest('hex');const key='coastlyne:analysis:'+fingerprint;
  const cached=await redis(['GET',key]);if(typeof cached==='string')return JSON.parse(cached);
  const lock=await redis(['SET',key+':lock','1','NX','EX',90]);if(!lock)throw new DataError(429,'This briefing is already being prepared. Please try again shortly.');
  try{
