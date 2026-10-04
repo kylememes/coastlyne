@@ -10,7 +10,7 @@ export function purchasingPower(value:number,inflation:number,years:number){if(i
 export function fire(spending:number,assets:number,annual:number,rate:number,inflation:number,withdrawal:number){if(withdrawal<=0||spending<0||annual<0)throw Error('Invalid FIRE inputs');const target=spending/(withdrawal/100),real=((1+rate/100)/(1+inflation/100)-1)*100;let years:number|null=null;for(let m=0;m<=1200;m++){if(futureValue(assets,annual/12,real,m/12)>=target){years=m/12;break}}return {target,years,progress:target?assets/target*100:100,real}}
 
 export function cashflow(items:FlowItem[]){const sum=(kind:FlowItem['kind'])=>items.filter(i=>i.kind===kind).reduce((s,i)=>s+monthlyAmount(i,items),0);const income=sum('income'),fixed=sum('fixed'),variable=sum('variable'),saving=sum('saving');return {income,fixed,variable,saving,spending:fixed+variable,remaining:income-fixed-variable-saving,savingsRate:income?saving/income*100:0,fixedRate:income?fixed/income*100:0}}
-export type Goal={id:string;name:string;target:number;saved:number;date:string;monthly:number;rate:number;category:string};
+export type Goal={island?:number;id:string;name:string;target:number;saved:number;date:string;monthly:number;rate:number;category:string};
 export function goalProjection(g:Goal,now=new Date()){
  const d=new Date(g.date+'T00:00:00Z');const valid=Number.isFinite(d.getTime())&&d.toISOString().slice(0,10)===g.date;
  const months=valid?Math.max(0,(d.getUTCFullYear()-now.getUTCFullYear())*12+d.getUTCMonth()-now.getUTCMonth()+(d.getUTCDate()>now.getUTCDate()?1:0)):null;
